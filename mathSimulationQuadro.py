@@ -1,5 +1,6 @@
 import yaml
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 def read_yaml(t):
@@ -25,7 +26,9 @@ class ControlSystemQuadro:
         self.desired_z = z
 
         self.error_past_z = self.desired_z
+        self.current_position_z = self.desired_z
         self.g = 9.81
+        self.poseList = []
 
 
         # считываем параметры из YAML-файла
@@ -96,16 +99,16 @@ class ControlSystemQuadro:
         self.maxThrust = self.control_system[30]
 
     def printing(self):
-        print(self.Ixx, self.maxThrust)
+        print(self.motorThrustCoef, self.maxThrust)
 
     def max_thrust(self):
-        thrust_of_rotors = (self.numberOfRotors * (self.maxThrust**2)) * self.motorThrustCoef
-        print(thrust_of_rotors)
+        thrust_of_rotors = (self.numberOfRotors * (self.VelocityRotors**2)) * self.motorThrustCoef
+        # print(thrust_of_rotors)
         acceleration = thrust_of_rotors / self.mass - self.g
-        # velocity = acceleration * self.dt
-        # position = velocity * self.dt
+        velocity = acceleration * self.dt
+        position = velocity * self.dt
 
-        return acceleration
+        return position
 
 
 
@@ -115,29 +118,63 @@ class ControlSystemQuadro:
         return desired_position
         # angularRateError =
 
-    def desired_z_position(self, current_position_z):
-        error_z = self.desired_z - current_position_z
-        print(error_z)
-        error_integral_position_z = error_z * self.dt
+    def desired_z_position(self):
+        error_z = self.desired_z - self.current_position_z
+        # print(error_z)
+        error_integral_position_z = self.current_position_z
+        error_integral_position_z += error_z * self.dt
         p_des_z = self.KpZPosition * error_z + \
                 self.KiZPosition * error_integral_position_z + \
                 self.KdZPosition * ((error_z - self.error_past_z)/self.dt)
         self.error_past_z = error_z
-        print(self.max_thrust())
+        print(p_des_z)
         # max = self.max_thrust()
-        if p_des_z > self.max_thrust():
-            p_des_z = self.max_thrust()
+        if p_des_z > self.VelocityRotors:
+            p_des_z = self.VelocityRotors
         elif p_des_z < 0:
             p_des_z = 0
         return p_des_z
 
 
+    def run_simulator(self):
+        time = 0
 
+        while time < 5: # self.simulationTotalTime:
+            pose = self.desired_z_position()
+            self.poseList.append(pose)
+            time += self.dt
 
+xoxo = ControlSystemQuadro(0, 0, 10)
+posez = xoxo.run_simulator()
+print(posez)
+
+# def showPlots():
+#
+#     f = plt.figure(constrained_layout=True)
+#     gs = f.add_gridspec(3, 5)
+#     ax1 = f.add_subplot(gs[0, :-1])
+#     ax1.plot(posez)
+#     ax1.grid()
+#     ax1.set_title('position')
+#
+#     ax2 = f.add_subplot(gs[1, :-1])
+#     ax2.plot(posez, "g")
+#     ax2.grid()
+#     ax2.set_title('velocity')
+#
+#     ax3 = f.add_subplot(gs[2, :-1])
+#     ax3.plot(posez, "r")
+#     ax3.grid()
+#     ax3.set_title('acceleration')
+#
+#     plt.show()
+#
+# showPlots()
 
 
 class MatModelQuadro:
     def __init__(self):
+
         pass
 
 
@@ -146,7 +183,9 @@ class MatrixOfRotation:
         pass
 
 
-xoxo = ControlSystemQuadro(0, 0, 10)
-xoxo.printing()
-print(xoxo.desired_position())
-print(xoxo.desired_z_position(0))
+
+# xoxo.printing()
+# print(xoxo.desired_position())
+# print(xoxo.desired_z_position(0))
+
+
