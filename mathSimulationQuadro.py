@@ -1,4 +1,5 @@
 import yaml
+import numpy as np
 
 
 def read_yaml(t):
@@ -17,7 +18,15 @@ def read_yaml(t):
 
 
 class ControlSystemQuadro:
-    def __init__(self):
+    def __init__(self, x, y, z):
+
+        self.desired_x = x
+        self.desired_y = y
+        self.desired_z = z
+
+        self.error_past_z = self.desired_z
+
+
         # считываем параметры из YAML-файла
         self.model_config = read_yaml('quadModelConfig.yaml')
         self.control_system = read_yaml('quadControlSystem.yaml')
@@ -85,9 +94,27 @@ class ControlSystemQuadro:
         # Ограничение по тяге
         self.maxThrust = self.control_system[30]
 
-
     def printing(self):
-        print(self.Ixx)
+        print(self.Ixx, self.maxThrust)
+
+    def desired_position(self):
+        desired_position = np.array([self.desired_x, self.desired_y, self.desired_z])
+
+        return desired_position
+        # angularRateError =
+
+    def desired_z_position(self, current_position_z):
+        error_z = self.desired_z - current_position_z
+        error_integral_position_z = error_z * self.dt
+        p_des_z = self.KpZPosition * error_z + \
+                self.KiZPosition * error_integral_position_z + \
+                self.KdZPosition * ((error_z - self.error_past_z)/self.dt)
+        self.error_past_z = error_z
+        return p_des_z
+
+
+
+
 
 
 class MatModelQuadro:
@@ -100,5 +127,7 @@ class MatrixOfRotation:
         pass
 
 
-x = ControlSystemQuadro()
-x.printing()
+xoxo = ControlSystemQuadro(0, 0, 1)
+xoxo.printing()
+print(xoxo.desired_position())
+print(xoxo.desired_z_position(0))
