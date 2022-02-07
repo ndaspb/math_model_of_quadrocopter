@@ -25,6 +25,7 @@ class ControlSystemQuadro:
         self.desired_z = z
 
         self.error_past_z = self.desired_z
+        self.g = 9.81
 
 
         # считываем параметры из YAML-файла
@@ -38,7 +39,7 @@ class ControlSystemQuadro:
         self.lengthOfFlyerArms = self.model_config[5]
         self.motorThrustCoef = self.model_config[3]
         self.motorResistCoef = self.model_config[4]
-        self.numerOfRotors = self.model_config[6]
+        self.numberOfRotors = self.model_config[6]
         self.Ixx = self.model_config[7]
         self.Iyy = self.model_config[8]
         self.Izz = self.model_config[9]
@@ -97,6 +98,17 @@ class ControlSystemQuadro:
     def printing(self):
         print(self.Ixx, self.maxThrust)
 
+    def max_thrust(self):
+        thrust_of_rotors = (self.numberOfRotors * (self.maxThrust**2)) * self.motorThrustCoef
+        print(thrust_of_rotors)
+        acceleration = thrust_of_rotors / self.mass - self.g
+        # velocity = acceleration * self.dt
+        # position = velocity * self.dt
+
+        return acceleration
+
+
+
     def desired_position(self):
         desired_position = np.array([self.desired_x, self.desired_y, self.desired_z])
 
@@ -105,11 +117,18 @@ class ControlSystemQuadro:
 
     def desired_z_position(self, current_position_z):
         error_z = self.desired_z - current_position_z
+        print(error_z)
         error_integral_position_z = error_z * self.dt
         p_des_z = self.KpZPosition * error_z + \
                 self.KiZPosition * error_integral_position_z + \
                 self.KdZPosition * ((error_z - self.error_past_z)/self.dt)
         self.error_past_z = error_z
+        print(self.max_thrust())
+        # max = self.max_thrust()
+        if p_des_z > self.max_thrust():
+            p_des_z = self.max_thrust()
+        elif p_des_z < 0:
+            p_des_z = 0
         return p_des_z
 
 
@@ -127,7 +146,7 @@ class MatrixOfRotation:
         pass
 
 
-xoxo = ControlSystemQuadro(0, 0, 1)
+xoxo = ControlSystemQuadro(0, 0, 10)
 xoxo.printing()
 print(xoxo.desired_position())
 print(xoxo.desired_z_position(0))
