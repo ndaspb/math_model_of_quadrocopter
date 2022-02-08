@@ -98,10 +98,34 @@ class ControlSystemQuadro:
         # Ограничение по тяге
         self.maxThrust = self.control_system[30]
 
-    def printing(self):
-        print(self.motorThrustCoef, self.maxThrust)
+    # def printing(self):
+    #     print(self.motorThrustCoef, self.maxThrust)
 
-    def max_thrust(self):
+    def right_parts(self, rotorAngularVelocity): # pastStateVector, rotorAngularVelocity
+        inertialTensor = np.array([[self.Ixx, 0, 0],
+                                  [0, self.Iyy, 0],
+                                  [0, 0, self.Izz]])
+
+        sumRotorsVelocity = 0
+
+        # momentThrustRotors = np.array([0, 0, 0])
+        # print(momentThrustRotors)
+
+        normalizeVector = np.array([0, 0, 1])
+
+        for i in range(self.numberOfRotors):
+            sumRotorsVelocity += rotorAngularVelocity[i]**2
+
+        momentThrustRotors = np.array([[self.lengthOfFlyerArms * self.motorThrustCoef * (rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)],
+                                 [self.lengthOfFlyerArms * self.motorThrustCoef * (rotorAngularVelocity[3]**2 - rotorAngularVelocity[1]**2)],
+                                 [self.motorResistCoef * (rotorAngularVelocity[3]**2 + rotorAngularVelocity[1]**2 - rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)]])
+
+        print(momentThrustRotors)
+        print(rotorAngularVelocity)
+        print(sumRotorsVelocity)
+
+
+        # print(inertialTensor)
         thrust_of_rotors = (self.numberOfRotors * (self.VelocityRotors**2)) * self.motorThrustCoef
         # print(thrust_of_rotors)
         acceleration = thrust_of_rotors / self.mass - self.g
@@ -127,13 +151,16 @@ class ControlSystemQuadro:
                 self.KiZPosition * error_integral_position_z + \
                 self.KdZPosition * ((error_z - self.error_past_z)/self.dt)
         self.error_past_z = error_z
-        print(p_des_z)
-        # max = self.max_thrust()
+
         if p_des_z > self.VelocityRotors:
             p_des_z = self.VelocityRotors
-        elif p_des_z < 0:
-            p_des_z = 0
-        return p_des_z
+        elif p_des_z < - self.VelocityRotors:
+            p_des_z = - self.VelocityRotors
+        acceleration = (self.motorThrustCoef * (p_des_z**2) * self.numberOfRotors) / self.mass - self.g
+        velocity = acceleration * self.dt
+        position = velocity * self.dt
+
+        return position
 
 
     def run_simulator(self):
@@ -145,8 +172,8 @@ class ControlSystemQuadro:
             time += self.dt
 
 xoxo = ControlSystemQuadro(0, 0, 10)
-posez = xoxo.run_simulator()
-print(posez)
+# posez = xoxo.run_simulator()
+xoxo.right_parts(np.array([100, 100, 300, 100]))
 
 # def showPlots():
 #
