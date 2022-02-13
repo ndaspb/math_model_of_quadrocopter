@@ -21,6 +21,13 @@ def read_yaml(t):
 class ControlSystemQuadro:
     def __init__(self, x, y, z):
 
+        self.acceleration = np.array([[0], [0], [0]])
+        self.velocity = np.array([[0], [0], [0]])
+        self.position = np.array([[0], [0], [0]])
+        self.angularAcceleration = np.array([[0], [0], [0]])
+        self.angularVelocity = np.array([[0], [0], [0]])
+        self.orientation = np.array([[0], [0], [0]])
+
         self.desired_x = x
         self.desired_y = y
         self.desired_z = z
@@ -116,9 +123,12 @@ class ControlSystemQuadro:
         for i in range(self.numberOfRotors):
             sumRotorsVelocity += rotorAngularVelocity[i]**2
 
-        momentThrustRotors = np.array([[self.lengthOfFlyerArms * self.motorThrustCoef * (rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)],
-                                 [self.lengthOfFlyerArms * self.motorThrustCoef * (rotorAngularVelocity[3]**2 - rotorAngularVelocity[1]**2)],
-                                 [self.motorResistCoef * (rotorAngularVelocity[3]**2 + rotorAngularVelocity[1]**2 - rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)]])
+        momentThrustRotors = np.array([[self.lengthOfFlyerArms * self.motorThrustCoef *
+                                        (rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)],
+                                    [self.lengthOfFlyerArms * self.motorThrustCoef * (rotorAngularVelocity[3]**2 -
+                                                                                   rotorAngularVelocity[1]**2)],
+                                    [self.motorResistCoef * (rotorAngularVelocity[3]**2 + rotorAngularVelocity[1]**2
+                                                          - rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)]])
 
         print(momentThrustRotors)
         print(rotorAngularVelocity)
