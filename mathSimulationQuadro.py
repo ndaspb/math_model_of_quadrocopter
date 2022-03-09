@@ -31,6 +31,13 @@ class ControlSystemQuadro:
         self.g = 9.81
         self.poseList = []
 
+        self.acceleration = np.array([[0], [0], [0]])
+        self.velocity = np.array([[0], [0], [0]])
+        self.position = np.array([[0], [0], [0]])
+        self.angularAcceleration = np.array([[0], [0], [0]])
+        self.angularVelocity = np.array([[0], [0], [0]])
+        self.orientation = np.array([[0], [0], [0]])
+
         # считываем параметры из YAML-файла
         self.model_config = read_yaml('quadModelConfig.yaml')
         self.control_system = read_yaml('quadControlSystem.yaml')
@@ -108,9 +115,6 @@ class ControlSystemQuadro:
 
         sumRotorsVelocity = 0
 
-        # momentThrustRotors = np.array([0, 0, 0])
-        # print(momentThrustRotors)
-
         normalizeVector = np.array([0, 0, 1])
 
         for i in range(self.numberOfRotors):
@@ -128,18 +132,7 @@ class ControlSystemQuadro:
         print(rotorAngularVelocity)
         print(sumRotorsVelocity)
 
-        # rotationMatrix = np.array([[c(yaw)*c(roll),	s(yaw)*c(roll),-s(roll)],
-        # 	                        [c(yaw)*s(pitch)*s(roll) - s(yaw)*c(pitch),	s(yaw)*s(pitch)*s(roll) + c(yaw)*c(pitch),	s(pitch)*c(roll)],
-        # 	                        [c(yaw)*s(roll)*c(pitch) + s(yaw)*s(pitch),	s(yaw)*c(pitch)*s(roll) - c(yaw)*s(pitch),	c(pitch)*c(roll)]])
-
-        # print(inertialTensor)
-        thrust_of_rotors = (self.numberOfRotors * (self.VelocityRotors ** 2)) * self.motorThrustCoef
-        # print(thrust_of_rotors)
-        acceleration = thrust_of_rotors / self.mass - self.g
-        velocity = acceleration * self.dt
-        position = velocity * self.dt
-
-        return position
+        return sumRotorsVelocity
 
     def rotation_matrix(self, angles):
         ct = math.cos(angles[0])
@@ -154,39 +147,41 @@ class ControlSystemQuadro:
         R = np.dot(R_z, np.dot(R_y, R_x))
         return R
 
-    def desired_position(self):
-        desired_position = np.array([self.desired_x, self.desired_y, self.desired_z])
+    def angular_acc(self):
 
-        return desired_position
-        # angularRateError =
+    # def desired_position(self):
+    #     desired_position = np.array([self.desired_x, self.desired_y, self.desired_z])
+    #
+    #     return desired_position
+    #     # angularRateError =
 
-    def desired_z_position(self):
-        error_z = self.desired_z - self.current_position_z
-        # print(error_z)
-        error_integral_position_z = self.current_position_z
-        error_integral_position_z += error_z * self.dt
-        p_des_z = self.KpZPosition * error_z + \
-                  self.KiZPosition * error_integral_position_z + \
-                  self.KdZPosition * ((error_z - self.error_past_z) / self.dt)
-        self.error_past_z = error_z
+    # def desired_z_position(self):
+    #     error_z = self.desired_z - self.current_position_z
+    #     # print(error_z)
+    #     error_integral_position_z = self.current_position_z
+    #     error_integral_position_z += error_z * self.dt
+    #     p_des_z = self.KpZPosition * error_z + \
+    #               self.KiZPosition * error_integral_position_z + \
+    #               self.KdZPosition * ((error_z - self.error_past_z) / self.dt)
+    #     self.error_past_z = error_z
+    #
+    #     if p_des_z > self.VelocityRotors:
+    #         p_des_z = self.VelocityRotors
+    #     elif p_des_z < - self.VelocityRotors:
+    #         p_des_z = - self.VelocityRotors
+    #     acceleration = (self.motorThrustCoef * (p_des_z ** 2) * self.numberOfRotors) / self.mass - self.g
+    #     velocity = acceleration * self.dt
+    #     position = velocity * self.dt
 
-        if p_des_z > self.VelocityRotors:
-            p_des_z = self.VelocityRotors
-        elif p_des_z < - self.VelocityRotors:
-            p_des_z = - self.VelocityRotors
-        acceleration = (self.motorThrustCoef * (p_des_z ** 2) * self.numberOfRotors) / self.mass - self.g
-        velocity = acceleration * self.dt
-        position = velocity * self.dt
+        # return position
 
-        return position
-
-    def run_simulator(self):
-        time = 0
-
-        while time < 5:  # self.simulationTotalTime:
-            pose = self.desired_z_position()
-            self.poseList.append(pose)
-            time += self.dt
+    # def run_simulator(self):
+    #     time = 0
+    #
+    #     while time < 5:  # self.simulationTotalTime:
+    #         pose = self.desired_z_position()
+    #         self.poseList.append(pose)
+    #         time += self.dt
 
 
 xoxo = ControlSystemQuadro(0, 0, 10)
