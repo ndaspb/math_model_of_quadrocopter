@@ -1,7 +1,6 @@
 import yaml
 import numpy as np
 from matplotlib import pyplot as plt
-import math
 
 
 def read_yaml(t):
@@ -30,6 +29,7 @@ class ControlSystemQuadro:
         self.current_position_z = self.desired_z
         self.g = 9.81
         self.poseList = []
+
 
         # считываем параметры из YAML-файла
         self.model_config = read_yaml('quadModelConfig.yaml')
@@ -101,10 +101,10 @@ class ControlSystemQuadro:
     # def printing(self):
     #     print(self.motorThrustCoef, self.maxThrust)
 
-    def right_parts(self, rotorAngularVelocity):  # pastStateVector, rotorAngularVelocity
+    def right_parts(self, rotorAngularVelocity): # pastStateVector, rotorAngularVelocity
         inertialTensor = np.array([[self.Ixx, 0, 0],
-                                   [0, self.Iyy, 0],
-                                   [0, 0, self.Izz]])
+                                  [0, self.Iyy, 0],
+                                  [0, 0, self.Izz]])
 
         sumRotorsVelocity = 0
 
@@ -114,26 +114,19 @@ class ControlSystemQuadro:
         normalizeVector = np.array([0, 0, 1])
 
         for i in range(self.numberOfRotors):
-            sumRotorsVelocity += rotorAngularVelocity[i] ** 2
+            sumRotorsVelocity += rotorAngularVelocity[i]**2
 
-        momentThrustRotors = np.array([[self.lengthOfFlyerArms * self.motorThrustCoef * (
-                    rotorAngularVelocity[0] ** 2 - rotorAngularVelocity[2] ** 2)],
-                                       [self.lengthOfFlyerArms * self.motorThrustCoef * (
-                                                   rotorAngularVelocity[3] ** 2 - rotorAngularVelocity[1] ** 2)],
-                                       [self.motorResistCoef * (
-                                                   rotorAngularVelocity[3] ** 2 + rotorAngularVelocity[1] ** 2 -
-                                                   rotorAngularVelocity[0] ** 2 - rotorAngularVelocity[2] ** 2)]])
+        momentThrustRotors = np.array([[self.lengthOfFlyerArms * self.motorThrustCoef * (rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)],
+                                 [self.lengthOfFlyerArms * self.motorThrustCoef * (rotorAngularVelocity[3]**2 - rotorAngularVelocity[1]**2)],
+                                 [self.motorResistCoef * (rotorAngularVelocity[3]**2 + rotorAngularVelocity[1]**2 - rotorAngularVelocity[0]**2 - rotorAngularVelocity[2]**2)]])
 
         print(momentThrustRotors)
         print(rotorAngularVelocity)
         print(sumRotorsVelocity)
 
-        # rotationMatrix = np.array([[c(yaw)*c(roll),	s(yaw)*c(roll),-s(roll)],
-        # 	                        [c(yaw)*s(pitch)*s(roll) - s(yaw)*c(pitch),	s(yaw)*s(pitch)*s(roll) + c(yaw)*c(pitch),	s(pitch)*c(roll)],
-        # 	                        [c(yaw)*s(roll)*c(pitch) + s(yaw)*s(pitch),	s(yaw)*c(pitch)*s(roll) - c(yaw)*s(pitch),	c(pitch)*c(roll)]])
 
         # print(inertialTensor)
-        thrust_of_rotors = (self.numberOfRotors * (self.VelocityRotors ** 2)) * self.motorThrustCoef
+        thrust_of_rotors = (self.numberOfRotors * (self.VelocityRotors**2)) * self.motorThrustCoef
         # print(thrust_of_rotors)
         acceleration = thrust_of_rotors / self.mass - self.g
         velocity = acceleration * self.dt
@@ -141,18 +134,7 @@ class ControlSystemQuadro:
 
         return position
 
-    def rotation_matrix(self, angles):
-        ct = math.cos(angles[0])
-        cp = math.cos(angles[1])
-        cg = math.cos(angles[2])
-        st = math.sin(angles[0])
-        sp = math.sin(angles[1])
-        sg = math.sin(angles[2])
-        R_x = np.array([[1, 0, 0], [0, ct, -st], [0, st, ct]])
-        R_y = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
-        R_z = np.array([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])
-        R = np.dot(R_z, np.dot(R_y, R_x))
-        return R
+
 
     def desired_position(self):
         desired_position = np.array([self.desired_x, self.desired_y, self.desired_z])
@@ -166,33 +148,32 @@ class ControlSystemQuadro:
         error_integral_position_z = self.current_position_z
         error_integral_position_z += error_z * self.dt
         p_des_z = self.KpZPosition * error_z + \
-                  self.KiZPosition * error_integral_position_z + \
-                  self.KdZPosition * ((error_z - self.error_past_z) / self.dt)
+                self.KiZPosition * error_integral_position_z + \
+                self.KdZPosition * ((error_z - self.error_past_z)/self.dt)
         self.error_past_z = error_z
 
         if p_des_z > self.VelocityRotors:
             p_des_z = self.VelocityRotors
         elif p_des_z < - self.VelocityRotors:
             p_des_z = - self.VelocityRotors
-        acceleration = (self.motorThrustCoef * (p_des_z ** 2) * self.numberOfRotors) / self.mass - self.g
+        acceleration = (self.motorThrustCoef * (p_des_z**2) * self.numberOfRotors) / self.mass - self.g
         velocity = acceleration * self.dt
         position = velocity * self.dt
 
         return position
 
+
     def run_simulator(self):
         time = 0
 
-        while time < 5:  # self.simulationTotalTime:
+        while time < 5: # self.simulationTotalTime:
             pose = self.desired_z_position()
             self.poseList.append(pose)
             time += self.dt
 
-
 xoxo = ControlSystemQuadro(0, 0, 10)
 # posez = xoxo.run_simulator()
 xoxo.right_parts(np.array([100, 100, 300, 100]))
-
 
 # def showPlots():
 #
@@ -220,6 +201,7 @@ xoxo.right_parts(np.array([100, 100, 300, 100]))
 
 class MatModelQuadro:
     def __init__(self):
+
         pass
 
 
@@ -227,6 +209,10 @@ class MatrixOfRotation:
     def __init__(self):
         pass
 
+
+
 # xoxo.printing()
 # print(xoxo.desired_position())
 # print(xoxo.desired_z_position(0))
+
+
