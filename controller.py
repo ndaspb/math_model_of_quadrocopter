@@ -34,9 +34,10 @@ class PID:
         I = self._k_i * error
         D = self._k_d * error
 
-        self.last_error = error
+        self._last_error = error
         output = P + I + D
         output = self.saturation(output, self._min_value, self._max_value)
+        return output
 
     def saturation(self, input, min, max):
         if input > max:
@@ -46,6 +47,7 @@ class PID:
         else:
             return input
 
+
 class QuadcopterController:
     def __init__(self):
         self.target_x = 0
@@ -53,7 +55,7 @@ class QuadcopterController:
         self.target_z = 10
         self.target_yaw = 0
 
-        self._u = np.array([[0.0],[0.0],[0.0],[0.0]])
+        self._u = np.array([[0.0], [0.0], [0.0], [0.0]])
 
         self.position_controller_x = PID()
         self.position_controller_y = PID()
@@ -87,10 +89,10 @@ class QuadcopterController:
         target_pitch = self.velocity_controller_y.update(state_vector[States.VY], target_vel_y, dt)
         cmd_trust = self.velocity_controller_z.update(state_vector[States.VZ], target_vel_z, dt)
 
-        cmd_trust *= cs.traste_scale
+        cmd_trust *= cs.trust_scale
         cmd_trust = self.velocity_controller_z.saturation(cmd_trust, cs.min_rotors_rpm, cs.max_rotors_rpm)
 
-        target_pitch_roll = self._rotation2d(state_vector[States.YAW][0]).transpose() @ np.array([[[target_pitch][0], [target_roll][0]]])
+        target_pitch_roll = self._rotation2d(state_vector[States.YAW][0]).transpose() @ np.array([[target_pitch][0], [target_roll][0]])
 
         target_roll = target_pitch_roll[0]
         target_pitch = target_pitch_roll[1]

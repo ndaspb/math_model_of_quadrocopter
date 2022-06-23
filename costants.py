@@ -29,7 +29,7 @@ drag_coeff = 7.5e-7
 
 max_rotors_rpm = 3500
 min_rotors_rpm = 100
-traste_scale = 1000
+trust_scale = 1000
 
 quadcopter_mass = 0.0630
 quadcopter_inertia = np.array([[5.82857e-04, 0.0, 0.0],
