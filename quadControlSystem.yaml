@@ -33,9 +33,9 @@ KpYPosition: 0
 KiYPosition: 0
 KdYPosition: 0
 # Коэффициенты ПИД регулятора пространственного положения по оси Z
-KpZPosition: 300
-KiZPosition: 50
-KdZPosition: 50
+KpZPosition: 0
+KiZPosition: 0
+KdZPosition: 0
 
 # Ограничение значений выхода ПИД-регулятора по угловому положению
 maxCommandAngle: 0
