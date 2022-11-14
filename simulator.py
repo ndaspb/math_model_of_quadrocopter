@@ -11,7 +11,7 @@ class Simulator:
         self.target_points = target_points
         self.time = 0
         self._host = '127.0.0.1'
-        self._port = 12345
+        self._port = 11223
         self.addr = (self._host, self._port)
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.count_point = 0
@@ -23,16 +23,18 @@ class Simulator:
         while True:
             state = self.model.get_state_vector()
             # self.controller.set_target_position(0, 0, 0)
+            self.controller.set_target_position(self.target_x, self.target_y, self.target_z)
+
             if (abs(state[0] - self.target_points[self.count_point][0]) < 0.5) \
                     and (abs(state[1] - self.target_points[self.count_point][1]) < 0.5) \
                     and (abs(state[2] - self.target_points[self.count_point][2]) < 0.5) \
                     and (len(self.target_points)-1 > self.count_point):
-                print('next point')
-
+                print('next point', self.count_point)
+                self.count_point += 1
                 self.target_x, self.target_y, self.target_z = self.target_points[self.count_point][0], self.target_points[self.count_point][1], self.target_points[self.count_point][2]
 
-                self.count_point += 1
-            self.controller.set_target_position(self.target_x, self.target_y, self.target_z)
+            # self.controller.set_target_position(self.target_x, self.target_y, self.target_z)
+            # print(self.target_x, self.target_y, self.target_z)
             u = self.controller.update(state, self.dt)
             self.model.update_state(u, self.dt)
             self._send_pose_data(state)

@@ -50,10 +50,10 @@ class PID:
 
 class QuadcopterController:
     def __init__(self):
-        self.target_x = 0
-        self.target_y = 0
-        self.target_z = 0
-        self.target_yaw = 0
+        # self.target_x = 0
+        # self.target_y = 0
+        # self.target_z = 0
+        # self.target_yaw = 0
 
         self._u = np.array([[0.0], [0.0], [0.0], [0.0]])
 
@@ -78,7 +78,7 @@ class QuadcopterController:
         self.target_y = y
         self.target_z = z
         self.target_yaw = yaw
-        return self.target_x, self.target_y, self.target_z, self.target_yaw
+        # return self.target_x, self.target_y, self.target_z, self.target_yaw
 
         # self.target_x, self.target_y, self.target_z, self.target_yaw = set_target_position()
 
