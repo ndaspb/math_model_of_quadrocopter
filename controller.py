@@ -52,7 +52,7 @@ class QuadcopterController:
     def __init__(self):
         self.target_x = 0
         self.target_y = 0
-        self.target_z = 10
+        self.target_z = 0
         self.target_yaw = 0
 
         self._u = np.array([[0.0], [0.0], [0.0], [0.0]])
@@ -73,15 +73,18 @@ class QuadcopterController:
         self.pitch_rate_controller = PID()
         self.yaw_rate_controller = PID()
 
-    def set_target_position(self, x, y, z, yaw):
+    def set_target_position(self, x=0, y=0, z=0, yaw=0):
         self.target_x = x
         self.target_y = y
         self.target_z = z
         self.target_yaw = yaw
+        return self.target_x, self.target_y, self.target_z, self.target_yaw
+
+        # self.target_x, self.target_y, self.target_z, self.target_yaw = set_target_position()
 
     def update(self, state_vector, dt):
 
-        target_vel_x = self.position_controller_x.update(state_vector[States.X], self.target_x ,dt)
+        target_vel_x = self.position_controller_x.update(state_vector[States.X], self.target_x, dt)
         target_vel_y = self.position_controller_y.update(state_vector[States.Y], self.target_y, dt)
         target_vel_z = self.position_controller_z.update(state_vector[States.Z], self.target_z, dt)
 
