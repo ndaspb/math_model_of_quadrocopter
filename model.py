@@ -29,7 +29,7 @@ class QuadcopterModel:
     def get_state_vector(self):
         return self.state_vector
 
-    def update_state(self, u , dt):
+    def update_state(self, u, dt):
         self._func_right(u)
         self._integrate(dt)
 

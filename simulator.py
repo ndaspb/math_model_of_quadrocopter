@@ -35,6 +35,7 @@ class Simulator:
 
             # self.controller.set_target_position(self.target_x, self.target_y, self.target_z)
             # print(self.target_x, self.target_y, self.target_z)
+            print(state[0], state[1], state[2])#,state[3], state[4], state[5],state[6], state[7], state[8])
             u = self.controller.update(state, self.dt)
             self.model.update_state(u, self.dt)
             self._send_pose_data(state)

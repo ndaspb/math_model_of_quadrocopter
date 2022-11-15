@@ -31,11 +31,13 @@ class PID:
         self._integral = self.saturation(self._integral, -self._integral_limit, self._integral_limit)
 
         P = self._k_p * error
-        I = self._k_i * error
-        D = self._k_d * error
+        I = self._k_i * self._integral
+        D = self._k_d * ((error - self._last_error)/dt)
+
+        output = P + I + D
 
         self._last_error = error
-        output = P + I + D
+
         output = self.saturation(output, self._min_value, self._max_value)
         return output
 
@@ -87,26 +89,27 @@ class QuadcopterController:
         target_vel_x = self.position_controller_x.update(state_vector[States.X], self.target_x, dt)
         target_vel_y = self.position_controller_y.update(state_vector[States.Y], self.target_y, dt)
         target_vel_z = self.position_controller_z.update(state_vector[States.Z], self.target_z, dt)
-
-        target_roll = self.velocity_controller_x.update(state_vector[States.VX], target_vel_x, dt)
-        target_pitch = self.velocity_controller_y.update(state_vector[States.VY], target_vel_y, dt)
+        # print(self.target_y)
+        target_pitch = self.velocity_controller_x.update(state_vector[States.VX], target_vel_x, dt)
+        target_roll = self.velocity_controller_y.update(state_vector[States.VY], target_vel_y, dt)
         cmd_trust = self.velocity_controller_z.update(state_vector[States.VZ], target_vel_z, dt)
-
+        # print(target_roll)
         cmd_trust *= cs.trust_scale
         cmd_trust = self.velocity_controller_z.saturation(cmd_trust, cs.min_rotors_rpm, cs.max_rotors_rpm)
 
         target_pitch_roll = self._rotation2d(state_vector[States.YAW][0]).transpose() @ np.array([[target_pitch][0], [target_roll][0]])
 
-        target_roll = target_pitch_roll[0]
-        target_pitch = target_pitch_roll[1]
+        target_pitch = target_pitch_roll[0]
+        target_roll = target_pitch_roll[1]
 
-        target_roll_rate = self.roll_controller.update(state_vector[States.ROLL], -target_roll, dt)
         target_pitch_rate = self.pitch_controller.update(state_vector[States.PITCH], target_pitch, dt)
+        target_roll_rate = self.roll_controller.update(state_vector[States.ROLL], -target_roll, dt)
         target_yaw_rate = self.yaw_rate_controller.update(state_vector[States.YAW], self.target_yaw, dt)
 
-        cmd_roll = self.roll_rate_controller.update(state_vector[States.ROLL_RATE], target_roll_rate, dt)
         cmd_pitch = self.pitch_rate_controller.update(state_vector[States.PITCH_RATE], target_pitch_rate, dt)
+        cmd_roll = self.roll_rate_controller.update(state_vector[States.ROLL_RATE], target_roll_rate, dt)
         cmd_yaw = self.yaw_rate_controller.update(state_vector[States.YAW_RATE], target_yaw_rate, dt)
+        print(cmd_roll)
 
         self._mixer(cmd_trust, cmd_roll, cmd_pitch, cmd_yaw)
         return self._u

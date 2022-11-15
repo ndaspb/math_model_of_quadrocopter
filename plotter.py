@@ -88,7 +88,7 @@ class plotter():
 
     def _reciveData(self):
         while True:
-            # print('wait data...')
+            print('wait data...')
             # recvfrom - получает UDP сообщения
             conn, addr = self.udp_socket.recvfrom(self.msgLen)
             self.stateVector = self._convertMessage(conn)
